@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ movie.title }}</title>
+</head>
+<body>
+    <h1>{{ movie.title }} ({{ movie.release_date|slice:":4" }})</h1>
+    <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="Poster of {{ movie.title }}">
+    <p><strong>Rating:</strong> {{ movie.vote_average }}</p>
+    <p><strong>Overview:</strong> {{ movie.overview }}</p>
+    <p><strong>Genres:</strong> {% for genre in movie.genres %}{{ genre.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+    <p><strong>Runtime:</strong> {{ movie.runtime }} minutes</p>
+    <p><strong>Release Date:</strong> {{ movie.release_date }}</p>
+    <p><strong>Original Language:</strong> {{ movie.original_language }}</p>
+    <a href="{% url 'index' %}">Back to Top Rated Movies</a>
+</body>
+</html>

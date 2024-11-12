@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TMDb Movies</title>
+    <style>
+        .movie-list {
+            display: flex;
+            flex-wrap: wrap;
+            list-style-type: none;
+            padding: 0;
+        }
+        .movie-item {
+            margin: 10px;
+            width: 200px;
+            text-align: center;
+        }
+        .movie-item img {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Top Rated Movies</h1>
+    <ul class="movie-list">
+        {% for movie in movies %}
+            <li class="movie-item">
+                <a href="{% url 'movie_detail' movie.id %}">
+                    <img src="{{ movie.poster }}" alt="Poster of {{ movie.title }}">
+                </a>
+                <h2>{{ movie.title }} ({{ movie.year }})</h2>
+                <p>Rating: {{ movie.rating }}</p>
+            </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
