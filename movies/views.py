@@ -1,7 +1,10 @@
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .serializers import MovieSerializer
+from movies.recommendation import get_recommendations
 import requests
+import traceback
+
 
 API_KEY = '0d7c60fd7811d07743a5a4bfe142ad40'
 
@@ -119,3 +122,61 @@ def get_genre_names(request):
         return Response({"error": "Failed to retrieve genre data"}, status=500)
     
     return Response(response.json())
+
+@api_view(['GET', 'POST'])
+def recommend_movies(request):
+    if request.method == 'GET':
+        title = request.query_params.get('title')
+        top_n = int(request.query_params.get('top_n', 10))
+
+        if not title:
+            return Response({"error": "A 'title' query parameter is required."}, status=400)
+
+        try:
+            recommendations = get_recommendations(title, top_n=top_n)
+            return Response(recommendations, status=200)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=404)
+        except Exception as e:
+            return Response({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
+
+    elif request.method == 'POST':
+        titles = request.data.get('titles', [])
+        top_n = int(request.data.get('top_n', 10))
+
+        #Test
+        print(f"Received titles: {titles}")
+
+        if not titles:
+            return Response({"error": "At least one title is required."}, status=400)
+
+        try:
+            recommendations = []
+            for title in titles:
+                try:
+                    print(f"Getting recommendations for {title}")
+                    recs = get_recommendations(title, top_n=top_n)
+                    recommendations.extend(recs)
+                except Exception as e:
+                    print(f"Error getting recommendations for {title}: {str(e)}")
+                    raise
+
+            unique_recommendations = {rec[0]: rec for rec in recommendations}
+
+            def is_float(value):
+                try:
+                    float(value)
+                    return True
+                except ValueError:
+                    return False
+            
+            sorted_recommendations = sorted(
+                unique_recommendations.values(),
+                key=lambda x: float(x[1]) if len(x) > 1 and is_float(x[1]) else 0,
+                reverse=True
+            )
+
+            return Response(sorted_recommendations[:top_n], status=200)
+        except Exception as e:
+            traceback.print_exc()
+            return Response({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
