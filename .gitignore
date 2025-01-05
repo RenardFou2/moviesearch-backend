@@ -1,0 +1,22 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Virtual environments
+venv/
+env/
+tmdb_recommendation/Lib/
+
+# Python bytecode
+*.pyc
+__pycache__/
+
+# Logs and temporary files
+*.log
+*.sqlite3
+*.env
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Node modules (if applicable)
+node_modules/
