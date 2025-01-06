@@ -155,26 +155,27 @@ def recommend_movies(request):
             for title in titles:
                 try:
                     print(f"Getting recommendations for {title}")
-                    recs = get_recommendations(title, top_n=top_n)
+                    recs = get_recommendations(title, top_n=10)
+
+                    # Jeśli nie ma rekomendacji
+                    if isinstance(recs, str):
+                        print(recs)
+                        continue
+
                     recommendations.extend(recs)
                 except Exception as e:
                     print(f"Error getting recommendations for {title}: {str(e)}")
-                    raise
+                    continue
 
-            unique_recommendations = {rec[0]: rec for rec in recommendations}
+            # Usuwa duplikaty
+            unique_recommendations = {}
+            for rec in recommendations:
+                if rec['title'] not in unique_recommendations or rec['similarity'] > unique_recommendations[rec['title']]['similarity']:
+                    unique_recommendations[rec['title']] = rec
+            print("Unique recommendations:", unique_recommendations)
 
-            def is_float(value):
-                try:
-                    float(value)
-                    return True
-                except ValueError:
-                    return False
-            
-            sorted_recommendations = sorted(
-                unique_recommendations.values(),
-                key=lambda x: float(x[1]) if len(x) > 1 and is_float(x[1]) else 0,
-                reverse=True
-            )
+            sorted_recommendations = sorted(unique_recommendations.values(), key=lambda x: x['similarity'], reverse=True)
+            print("Sorted recommendations:", sorted_recommendations)
 
             return Response(sorted_recommendations[:top_n], status=200)
         except Exception as e:
