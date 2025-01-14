@@ -10,7 +10,7 @@ TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"
 def fetch_poster(tmdb_id):
     try:
         url = f"https://api.themoviedb.org/3/movie/{tmdb_id}?api_key={API_KEY}"
-        response = requests.get(url, timeout=5)  # Add timeout
+        response = requests.get(url, timeout=5)
         if response.status_code == 200:
             data = response.json()
             poster_path = data.get("poster_path")
@@ -21,7 +21,7 @@ def fetch_poster(tmdb_id):
         print(f"Error fetching poster for TMDB ID {tmdb_id}: {e}")
         return None
     
-def get_recommendations(title, top_n=5):
+def get_recommendations(title, top_n=10):
 
     movies = Movie.objects.all()
     data = [

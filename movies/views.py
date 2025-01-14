@@ -142,7 +142,7 @@ def recommend_movies(request):
 
     elif request.method == 'POST':
         titles = request.data.get('titles', [])
-        top_n = int(request.data.get('top_n', 10))
+        top_n = int(request.data.get('top_n', 15))
 
         #Test
         print(f"Received titles: {titles}")
@@ -155,7 +155,7 @@ def recommend_movies(request):
             for title in titles:
                 try:
                     print(f"Getting recommendations for {title}")
-                    recs = get_recommendations(title, top_n=10)
+                    recs = get_recommendations(title, top_n=15)
 
                     # Jeśli nie ma rekomendacji
                     if isinstance(recs, str):
