@@ -155,7 +155,7 @@ def recommend_movies(request):
             for title in titles:
                 try:
                     print(f"Getting recommendations for {title}")
-                    recs = get_recommendations(title, top_n=15)
+                    recs = get_recommendations(title, top_n)
 
                     # Jeśli nie ma rekomendacji
                     if isinstance(recs, str):
@@ -172,12 +172,10 @@ def recommend_movies(request):
             for rec in recommendations:
                 if rec['title'] not in unique_recommendations or rec['similarity'] > unique_recommendations[rec['title']]['similarity']:
                     unique_recommendations[rec['title']] = rec
-            print("Unique recommendations:", unique_recommendations)
 
             sorted_recommendations = sorted(unique_recommendations.values(), key=lambda x: x['similarity'], reverse=True)
-            print("Sorted recommendations:", sorted_recommendations)
 
-            return Response(sorted_recommendations[:top_n], status=200)
+            return Response(sorted_recommendations, status=200)
         except Exception as e:
             traceback.print_exc()
             return Response({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
