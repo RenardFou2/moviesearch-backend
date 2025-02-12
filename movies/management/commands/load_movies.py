@@ -1,6 +1,5 @@
 import csv
 import json
-import pickle
 import requests
 from datetime import datetime
 from django.core.management.base import BaseCommand
@@ -145,14 +144,14 @@ class Command(BaseCommand):
             )
         ]
 
-        tfidf = TfidfVectorizer(stop_words='english', ngram_range=(1, 2), max_features=5000)
+        tfidf = TfidfVectorizer(stop_words='english', ngram_range=(1, 2), max_features=4000)
         tfidf_matrix = tfidf.fit_transform(features)
 
 
         for i, movie in enumerate(movies):
             try:
                 vector = tfidf_matrix[i].toarray()[0]
-                movie.set_vector(vector)  # Zapisać jako binarne
+                movie.set_vector(vector)  # Zapisać binarne
                 movie.save()
             except Exception as e:
                 print(f"Error processing movie {movie.title} ({movie.tmdb_id}): {e}")

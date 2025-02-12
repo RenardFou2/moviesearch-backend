@@ -1,6 +1,5 @@
 from django.db import models
 import pickle
-import json
 
 class Category(models.Model):
     name = models.CharField(max_length=100)

@@ -1,11 +1,8 @@
-import pandas as pd
 import numpy as np
-import pickle
-import ast
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from movies.models import Movie
 import requests
+from movies.apps import MoviesConfig
 
 API_KEY = '0d7c60fd7811d07743a5a4bfe142ad40'
 TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"
@@ -26,18 +23,7 @@ def fetch_poster(tmdb_id):
     
 def get_recommendations(title, top_n=10):
 
-    # Gatunki nie potrzebne bo wektory TF-IDF obliczone
-    movies = Movie.objects.all().values("tmdb_id", "title", "overview", "rating", "vector", "poster")
-    movie_list = list(movies)
-    dbcontent = pd.DataFrame(movie_list)
-
-    def deserialize_vector(byte_data):
-        try:
-            return pickle.loads(byte_data)
-        except Exception as e:
-            print(f"Error deserializing vector: {e}")
-            return np.zeros(5000)  # Default
-    dbcontent["vector"] = dbcontent["vector"].apply(deserialize_vector)
+    dbcontent = MoviesConfig.vectors
 
     if title.lower() not in dbcontent["title"].str.lower().values:
         return f"Movie '{title}' not found in the database."
@@ -47,7 +33,7 @@ def get_recommendations(title, top_n=10):
 
     sim_scores = cosine_similarity(tfidf_matrix[idx].reshape(1, -1), tfidf_matrix).flatten()
 
-    # Top N podobnych filmów
+    #Top N podobnych filmów
     similar_indices = np.argsort(sim_scores)[::-1][1:top_n + 1]
 
     recommended_movies = dbcontent.iloc[similar_indices].copy()
