@@ -60,6 +60,7 @@ def get_movie_detail(request, movie_id):
         'rating': movie.get('vote_average', 'N/A'),
         'poster': f"https://image.tmdb.org/t/p/w500{movie.get('poster_path', '')}",
         'overview': movie.get('overview', 'N/A'),
+        'categories': [genre['name'] for genre in movie.get('genres', [])]
     }
     
     serializer = MovieSerializer(movie_data)
