@@ -47,12 +47,17 @@ def get_movies(request):
 
 @api_view(['GET'])
 def get_movie_detail(request, movie_id):
-    url = f'https://api.themoviedb.org/3/movie/{movie_id}?api_key={API_KEY}'
+    url = f'https://api.themoviedb.org/3/movie/{movie_id}?api_key={API_KEY}&append_to_response=images'
     response = requests.get(url)
     if response.status_code != 200:
         return Response({"error": "Failed to retrieve data"}, status=500)
 
     movie = response.json()
+
+    backdrop_urls = [
+    f"https://image.tmdb.org/t/p/w780{img['file_path']}" for img in movie.get("images", {}).get("backdrops", [])[:5]
+    ]
+
     movie_data = {
         'id': movie.get('id'),
         'title': movie.get('title', 'N/A'),
@@ -60,7 +65,8 @@ def get_movie_detail(request, movie_id):
         'rating': movie.get('vote_average', 'N/A'),
         'poster': f"https://image.tmdb.org/t/p/w500{movie.get('poster_path', '')}",
         'overview': movie.get('overview', 'N/A'),
-        'categories': [genre['name'] for genre in movie.get('genres', [])]
+        'categories': [genre['name'] for genre in movie.get('genres', [])],
+        'backdrops': backdrop_urls
     }
     
     serializer = MovieSerializer(movie_data)
