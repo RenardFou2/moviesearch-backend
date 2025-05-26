@@ -4,7 +4,7 @@ from movies.models import Movie
 import requests
 from movies.apps import MoviesConfig
 
-API_KEY = '0d7c60fd7811d07743a5a4bfe142ad40'
+API_KEY = 'W pliku'
 TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"
 
 def fetch_poster(tmdb_id):

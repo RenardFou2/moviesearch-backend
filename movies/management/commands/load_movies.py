@@ -8,7 +8,7 @@ import numpy as np
 
 from movies.models import Movie, Category
 
-TMDB_API_KEY = '0d7c60fd7811d07743a5a4bfe142ad40'
+TMDB_API_KEY = 'W recovery.txt'
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 
 class Command(BaseCommand):
