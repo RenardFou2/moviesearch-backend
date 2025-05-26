@@ -9,7 +9,7 @@ import traceback
 API_KEY = '0d7c60fd7811d07743a5a4bfe142ad40'
 
 BASE_URL = 'https://api.themoviedb.org/3/movie/'
-
+    
 CATEGORIES = {
     "top_rated": "top_rated",
     "popular": "popular",
@@ -47,12 +47,17 @@ def get_movies(request):
 
 @api_view(['GET'])
 def get_movie_detail(request, movie_id):
-    url = f'https://api.themoviedb.org/3/movie/{movie_id}?api_key={API_KEY}'
+    url = f'https://api.themoviedb.org/3/movie/{movie_id}?api_key={API_KEY}&append_to_response=images'
     response = requests.get(url)
     if response.status_code != 200:
         return Response({"error": "Failed to retrieve data"}, status=500)
 
     movie = response.json()
+
+    backdrop_urls = [
+    f"https://image.tmdb.org/t/p/w780{img['file_path']}" for img in movie.get("images", {}).get("backdrops", [])[:5]
+    ]
+
     movie_data = {
         'id': movie.get('id'),
         'title': movie.get('title', 'N/A'),
@@ -60,6 +65,8 @@ def get_movie_detail(request, movie_id):
         'rating': movie.get('vote_average', 'N/A'),
         'poster': f"https://image.tmdb.org/t/p/w500{movie.get('poster_path', '')}",
         'overview': movie.get('overview', 'N/A'),
+        'categories': [genre['name'] for genre in movie.get('genres', [])],
+        'backdrops': backdrop_urls
     }
     
     serializer = MovieSerializer(movie_data)
@@ -155,7 +162,7 @@ def recommend_movies(request):
             for title in titles:
                 try:
                     print(f"Getting recommendations for {title}")
-                    recs = get_recommendations(title, top_n=15)
+                    recs = get_recommendations(title, top_n)
 
                     # Jeśli nie ma rekomendacji
                     if isinstance(recs, str):
@@ -172,12 +179,10 @@ def recommend_movies(request):
             for rec in recommendations:
                 if rec['title'] not in unique_recommendations or rec['similarity'] > unique_recommendations[rec['title']]['similarity']:
                     unique_recommendations[rec['title']] = rec
-            print("Unique recommendations:", unique_recommendations)
 
             sorted_recommendations = sorted(unique_recommendations.values(), key=lambda x: x['similarity'], reverse=True)
-            print("Sorted recommendations:", sorted_recommendations)
 
-            return Response(sorted_recommendations[:top_n], status=200)
+            return Response(sorted_recommendations, status=200)
         except Exception as e:
             traceback.print_exc()
             return Response({"error": f"An unexpected error occurred: {str(e)}"}, status=500)

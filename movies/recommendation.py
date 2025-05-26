@@ -1,10 +1,10 @@
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from movies.models import Movie
 import requests
+from movies.apps import MoviesConfig
 
-API_KEY = '0d7c60fd7811d07743a5a4bfe142ad40'
+API_KEY = 'W pliku'
 TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"
 
 def fetch_poster(tmdb_id):
@@ -23,46 +23,25 @@ def fetch_poster(tmdb_id):
     
 def get_recommendations(title, top_n=10):
 
-    movies = Movie.objects.all()
-    data = [
-        {
-            "id": movie.tmdb_id,
-            "title": movie.title,
-            "overview": movie.overview,
-            "categories": ", ".join([category.name for category in movie.categories.all()]),
-            "rating": movie.rating,
-        }
-        for movie in movies
-    ]
-    dbcontent = pd.DataFrame(data)
+    dbcontent = MoviesConfig.vectors
 
-    dbcontent['features'] = dbcontent['title'] + " " + dbcontent['overview'] + " " + dbcontent['categories']
-
-    tfidf = TfidfVectorizer(stop_words='english')
-    tfidf_matrix = tfidf.fit_transform(dbcontent['features'])
-
-    cosine_sim = cosine_similarity(tfidf_matrix, tfidf_matrix)
-    
-    try:
-        idx = dbcontent[dbcontent['title'].str.lower() == title.lower()].index[0]
-    except IndexError:
+    if title.lower() not in dbcontent["title"].str.lower().values:
         return f"Movie '{title}' not found in the database."
-    
-    #Oblicza podobieństwa
-    sim_scores = list(enumerate(cosine_sim[idx]))
-    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-    
 
-    # "n" podobnych filmów
-    sim_scores = sim_scores[1:top_n + 1]
-    movie_indices = [i[0] for i in sim_scores]
-    similarity_scores = [i[1] for i in sim_scores]
+    tfidf_matrix = np.stack(dbcontent["vector"].values)
+    idx = dbcontent[dbcontent["title"].str.lower() == title.lower()].index[0]
 
-    recommended_movies = dbcontent.iloc[movie_indices].reset_index(drop=True)
-    recommended_movies['id'] = recommended_movies['id']
-    recommended_movies['similarity'] = similarity_scores
+    sim_scores = cosine_similarity(tfidf_matrix[idx].reshape(1, -1), tfidf_matrix).flatten()
 
-    recommended_movies['poster'] = recommended_movies['id'].apply(fetch_poster)
+    #Top N podobnych filmów
+    similar_indices = np.argsort(sim_scores)[::-1][1:top_n + 1]
 
-    
-    return recommended_movies.to_dict('records')
+    recommended_movies = dbcontent.iloc[similar_indices].copy()
+    recommended_movies["similarity"] = sim_scores[similar_indices]
+
+    recommended_movies["poster"] = recommended_movies.apply(
+        lambda row: fetch_poster(row["tmdb_id"]), axis=1
+    )
+
+    recommended_movies.rename(columns={"tmdb_id": "id"}, inplace=True)
+    return recommended_movies[["id", "title", "overview", "rating", "poster", "similarity"]].to_dict("records")
