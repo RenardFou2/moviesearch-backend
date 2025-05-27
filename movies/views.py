@@ -6,7 +6,7 @@ import requests
 import traceback
 
 
-API_KEY = '0d7c60fd7811d07743a5a4bfe142ad40'
+API_KEY = 'W pliku'
 
 BASE_URL = 'https://api.themoviedb.org/3/movie/'
     
